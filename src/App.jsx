@@ -1,9 +1,42 @@
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import Home from "./ui/Home";
+import Menu from "./features/menu/Menu";
+import Cart from "./features/cart/Cart";
+import CreateOrder from "./features/order/CreateOrder";
+import Order from "./features/order/Order";
+import AppLayout from "./ui/AppLayout";
+
+const router = createBrowserRouter([
+  {
+    // ^ first the other elements apart from applayout were on top array but now we have made them place in array inside children and made them children of applayout
+    element: <AppLayout />,
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "/menu",
+        element: <Menu />,
+      },
+      {
+        path: "/cart",
+        element: <Cart />,
+      },
+      {
+        path: "/order/new",
+        element: <CreateOrder />,
+      },
+      {
+        path: "/order/:orderId",
+        element: <Order />,
+      },
+    ],
+  },
+]);
+
 function App() {
-  return (
-    <>
-      <h1>hello Vite</h1>
-    </>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
