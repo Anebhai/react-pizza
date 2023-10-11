@@ -1,4 +1,13 @@
 import { useState } from "react";
+import {
+  Form,
+  json,
+  redirect,
+  useActionData,
+  useNavigation,
+} from "react-router-dom";
+import Cart from "../cart/Cart";
+import { createOrder } from "../../services/apiRestaurant";
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) =>
@@ -31,6 +40,10 @@ const fakeCart = [
 ];
 
 function CreateOrder() {
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
+  const formErrors = useActionData();
+  // ^notice in useActiondata its not error in name but data, but we usually use to catch error.
   // const [withPriority, setWithPriority] = useState(false);
   const cart = fakeCart;
 
@@ -38,7 +51,11 @@ function CreateOrder() {
     <div>
       <h2>Ready to order? Let's go!</h2>
 
-      <form>
+      {/* <Form method="post" action="/order/new"> */}
+
+      {/* Above form also works react router is smart enough to link to the familiar route */}
+      <Form method="post">
+        {/* BY using form of react router its so much easy we dont need to use useeffect, preventdefault, state variables for each input field etc */}
         <div>
           <label>First Name</label>
           <input type="text" name="customer" required />
@@ -49,6 +66,7 @@ function CreateOrder() {
           <div>
             <input type="tel" name="phone" required />
           </div>
+          {formErrors?.phone && <p>{formErrors.phone}</p>}
         </div>
 
         <div>
@@ -70,11 +88,38 @@ function CreateOrder() {
         </div>
 
         <div>
-          <button>Order now</button>
+          {/* Below input is one of the way to see the fake cart so remember this method especially name stringify(cart) */}
+          <input type="hidden" name="cart" value={JSON.stringify(cart)} />
+          <button hidden={isSubmitting}>
+            {isSubmitting ? "Placing Order..." : "Order Now"}
+          </button>
         </div>
-      </form>
+      </Form>
     </div>
   );
+}
+
+export async function action({ request }) {
+  const formData = await request.formData();
+  const data = Object.fromEntries(formData);
+  // *The above two lines of code recipes will remain same
+
+  const order = {
+    ...data,
+    cart: JSON.parse(data.cart),
+    priority: data.priority === "on",
+  };
+  const errors = {};
+  if (!isValidPhone(order.phone)) {
+    errors.phone =
+      "please give us the correct phone number,We might need to contact you.";
+  }
+  if (Object.keys(errors).length > 0) return errors;
+  //^ this is to catch errors using useActiondata hook.
+
+  const newOrder = await createOrder(order);
+  // *here below as its not a component so the react router provides as redirect instead of usenavigat()
+  return redirect(`/order/${newOrder.id}`);
 }
 
 export default CreateOrder;
